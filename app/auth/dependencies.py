@@ -1,3 +1,5 @@
+#dependency functions for protected endpoints 
+
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
@@ -7,7 +9,7 @@ from app.config import settings
 from app.database import engine
 from app.auth.models import User
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/token")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/token") #reads authorization header 
 
 def get_current_user(token: str = Depends(oauth2_scheme)) -> User:
     try:
@@ -20,5 +22,5 @@ def get_current_user(token: str = Depends(oauth2_scheme)) -> User:
     with Session(engine) as sess:
         user = sess.exec(select(User).where(User.username == username)).first()
     if not user:
-        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="User not found")
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="User not found") #raise error if token is invalid/expired/user does not exist 
     return user

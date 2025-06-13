@@ -1,11 +1,11 @@
 # app/auth/router.py
 #from fastapi import APIRouter
-
 #router = APIRouter()
-
 #@router.get("/ping")
 #def ping():
  #   return {"pong": True}
+
+#HTTP endpoints under /auth 
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm

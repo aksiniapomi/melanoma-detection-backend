@@ -1,3 +1,5 @@
+#how users are stored in the database; the Users table in the database 
+
 from typing import Optional
 from sqlmodel import SQLModel, Field
 
