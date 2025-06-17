@@ -2,11 +2,18 @@
 # schemas.py inside each feature-area folder 
 # request/response models 
 
-from pydantic import BaseModel
+from datetime import datetime
+from sqlmodel import SQLModel
 
-class PredictionOut(BaseModel):
+class PredictionOut(SQLModel):
+    id: int
+    user_id: int
+    timestamp: datetime
+    label: str
     probability: float
-    label:       str
+
+    class Config:
+        orm_mode = True
 
 #tells FastAPI POST /predict return JSON object 
 # { "probability": 0.42, "label": "benign" }

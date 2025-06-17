@@ -2,6 +2,7 @@
 
 from sqlmodel import SQLModel, create_engine
 from app.config import settings #import settings instance to see which database to use 
+import app.models
 
 engine = create_engine(
     settings.DATABASE_URL,
