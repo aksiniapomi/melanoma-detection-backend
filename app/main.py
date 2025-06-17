@@ -5,13 +5,14 @@ from contextlib import asynccontextmanager
 from app.database import init_db
 from app.auth.router import router as auth_router
 from app.config import settings
+from app.predict.router import router as predict_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # **Startup**: create your SQLite tables
+    # Startup: create SQLite tables
     init_db()
     yield      # <-- the application runs here; hand-off point between setup and teardown in the context-manager pattern
-    # **Shutdown**: place any teardown logic here if needed
+    # Shutdown: any teardown logic here
 
 app = FastAPI(
     title="Melanoma Detection API",
@@ -22,6 +23,8 @@ app = FastAPI(
 
 # include authentication endpoints
 app.include_router(auth_router, prefix="/auth", tags=["auth"])
+# include predict endpoint 
+app.include_router(predict_router, prefix="/predict", tags=["predict"])
 
 @app.get("/", tags=["root"])
 def read_root():
