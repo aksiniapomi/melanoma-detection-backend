@@ -1,12 +1,14 @@
 #business logic around suers and tokens 
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
+from uuid import uuid4
+
 from passlib.context import CryptContext
 from jose import jwt
 from sqlmodel import Session, select
 
 from app.database import engine
-from app.auth.models import User
+from app.auth.models import User, BlacklistedToken
 from app.config import settings
 
 pwd_ctx = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -35,6 +37,31 @@ def verify_password(plain: str, hashed: str) -> bool:
 
 #build and sign jwt with sub=username and expiry 
 def create_access_token(subject: str) -> str:
-    expire = datetime.utcnow() + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
-    to_encode = {"sub": subject, "exp": expire}
-    return jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
+    """
+    Builds and signs a JWT with:
+      - sub=username
+      - exp=now + expiry
+      - jti=random UUID for revocation tracking
+    """
+    now = datetime.now(timezone.utc)
+    expire = now + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+    jti = str(uuid4())
+    to_encode = {
+        "sub": subject,
+        "exp": expire,
+        "iat": now,
+        "jti": jti
+    }
+    encoded = jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
+    return encoded
+
+def revoke_token(jti: str) -> BlacklistedToken:
+    """
+    Store a tokens jti in the blacklist so it can no longer be used
+    """
+    bl = BlacklistedToken(jti=jti)
+    with Session(engine) as sess:
+        sess.add(bl)
+        sess.commit()
+        sess.refresh(bl)
+    return bl
