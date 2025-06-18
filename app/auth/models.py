@@ -9,6 +9,11 @@ class User(SQLModel, table=True):
     username: str     = Field(index=True, unique=True)
     email: str        = Field(unique=True, index=True)
     hashed_password: str
+    is_verified: bool = Field(default=False, description="Has the user confirmed their e-mail?")
+    created_at: datetime = Field(
+           default_factory=lambda: datetime.now(timezone.utc),
+           description="UTC timestamp when the user was created"
+   )
 
 class BlacklistedToken(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
@@ -16,4 +21,6 @@ class BlacklistedToken(SQLModel, table=True):
     created_at: datetime = Field(
         default_factory=lambda: datetime.now(timezone.utc),
         description="UTC timestamp When this token was blacklisted"
-    )
+    ) 
+    
+    
