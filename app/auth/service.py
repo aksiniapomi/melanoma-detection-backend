@@ -76,7 +76,7 @@ def create_access_token(subject: str) -> str:
 
 def generate_email_verification_token(email: str) -> str:
     now    = datetime.now(timezone.utc)
-    expire = now + timedelta(minutes=settings.EMAIL_VERIFY_EXPIRE_MINUTES)
+    expire = now + timedelta(minutes=settings.EMAIL_TOKEN_EXPIRE_MINUTES)
     to_sign = {
         "sub":   email,
         "exp":   expire,
