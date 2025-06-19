@@ -1,10 +1,11 @@
-#business logic around suers and tokens 
+#business logic around users and tokens 
 
+import logging
 from datetime import datetime, timedelta, timezone
 from uuid import uuid4
 
 from passlib.context import CryptContext
-from jose import jwt
+from jose import jwt, JWTError
 from sqlmodel import Session, select
 
 from app.database import engine
@@ -111,10 +112,13 @@ def mark_user_verified(email: str) -> User:
         return user
 
 def send_verification_email(email: str):
+    # generate the token 
     token = generate_email_verification_token(email)
-    link  = f"{settings.FRONTEND_URL}/verify?token={token}"
-    body  = f"Click to verify your email: {link}"
-    send_email(to=email, subject="Verify your account", body=body)
+    # refer to the token 
+    link = f"{settings.FRONTEND_URL}/verify?token={token}"
+    body = f"Click here to verify your address:\n\n{link}"
+    # SendGrid call
+    send_email(to=email, subject="Please verify your email", body=body)
     return token
 
 def revoke_token(jti: str) -> BlacklistedToken:
