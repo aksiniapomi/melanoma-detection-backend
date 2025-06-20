@@ -12,26 +12,40 @@ from app.database import engine
 from app.auth.models import User, BlacklistedToken
 from app.config import settings
 from app.utils.email  import send_email
+from app.auth.schemas import UserRead
+from sqlalchemy.exc import IntegrityError
+from fastapi import HTTPException
 
 pwd_ctx = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-#fetch a suer by username 
+# helper to hash raw passwords
+def hash_password(raw_password: str) -> str:
+ return pwd_ctx.hash(raw_password)
+
+#fetch a user by username 
 def get_user(username: str) -> User | None:
     with Session(engine) as sess:
         return sess.exec(select(User).where(User.username == username)).first()
     
-#hash the plain password 
-def create_user(username: str, email: str, password: str) -> User:
+def create_user(username: str, email: str, password: str) -> UserRead:
     user = User(
         username=username,
         email=email,
-        hashed_password=pwd_ctx.hash(password)
+        hashed_password=hash_password(password),
+        is_verified=False,
     )
     with Session(engine) as sess:
         sess.add(user)
-        sess.commit()
-        sess.refresh(user)
-    return user
+        try:
+            sess.commit()
+            sess.refresh(user)
+        except IntegrityError as e:
+            sess.rollback()
+            raise HTTPException(
+                status_code=400,
+                detail="A user with that username or email already exists.",
+            )
+        return UserRead.model_validate(user)
 
 def get_user_by_email(email: str) -> User | None:
     with Session(engine) as sess:

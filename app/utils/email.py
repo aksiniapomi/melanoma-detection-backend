@@ -3,6 +3,8 @@ import logging
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail
 from app.config import settings
+from email.message import EmailMessage
+import smtplib
 
 logger = logging.getLogger("email")
 logger.setLevel(logging.INFO)
