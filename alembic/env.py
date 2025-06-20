@@ -1,25 +1,27 @@
+
 from logging.config import fileConfig
 import os
 
-from sqlalchemy import engine_from_config
-from sqlalchemy import pool
-
+from sqlalchemy import engine_from_config, pool
 from alembic import context
-from app.config import settings
 
-# reads the [alembic] section from alembic.ini
+# Alembic Config object reads alembic.ini
 config = context.config
 
-# override the URL from .env / settings
+# override the URL from settings.py → .env
+from app.config import settings
 config.set_main_option("sqlalchemy.url", settings.DATABASE_URL)
 
+# set up python logging
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
+# import SQLModel models so that SQLModel.metadata is populated
 from sqlmodel import SQLModel
-from app.auth.models import User, BlacklistedToken
-from app.predict.models import Prediction
+import app.auth.models       # defines User, BlacklistedToken
+import app.predict.models    # defines Prediction
 
+# use the SQLModel metadata for 'autogenerate'
 target_metadata = SQLModel.metadata
 
 
@@ -37,7 +39,7 @@ def run_migrations_offline() -> None:
 
 def run_migrations_online() -> None:
     connectable = engine_from_config(
-        config.get_section(config.config_ini_section),
+        config.get_section(config.config_ini_section, {}),
         prefix="sqlalchemy.",
         poolclass=pool.NullPool,
     )

@@ -10,7 +10,7 @@ from jose import jwt
 from app.config import settings
 from app.database import engine
 from app.auth.models import User, BlacklistedToken
-from app.auth.service import get_current_user
+from app.auth.schemas import Token
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/token") #reads authorization header 
 
