@@ -1,7 +1,5 @@
 import os, ssl
 import logging
-from sendgrid import SendGridAPIClient
-from sendgrid.helpers.mail import Mail
 from app.config import settings
 from email.message import EmailMessage
 import smtplib
@@ -19,9 +17,9 @@ def send_email(to: str, subject: str, body: str):
     sender    = os.getenv("EMAIL_FROM_ADDRESS", smtp_user)
 
     # fallback to stub if creds missing
-    if not smtp_host or not smtp_user or not smtp_pass:
-        logger.info(f"[EMAIL STUB] To: {to}\nSubject: {subject}\n\n{body}\n")
-        return
+   #  if not smtp_host or not smtp_user or not smtp_pass:
+   #     logger.info(f"[EMAIL STUB] To: {to}\nSubject: {subject}\n\n{body}\n")
+   #        return
 
     msg = EmailMessage()
     msg["Subject"] = subject

@@ -42,7 +42,7 @@ def send_verification(email: str = Body(..., embed=True)):
         return {"message": "Email already verified"}
 
     token = send_verification_email(email)
-    return {"message": "Verification email sent (stubbed)", "token": token}
+    return {"message": "Verification email sent", "token": token}
 
 @router.post(
     "/verify",

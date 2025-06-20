@@ -28,24 +28,24 @@ def get_user(username: str) -> User | None:
         return sess.exec(select(User).where(User.username == username)).first()
     
 def create_user(username: str, email: str, password: str) -> UserRead:
+  with Session(engine) as sess:
     user = User(
         username=username,
         email=email,
         hashed_password=hash_password(password),
         is_verified=False,
     )
-    with Session(engine) as sess:
-        sess.add(user)
-        try:
+    sess.add(user)
+    try:
             sess.commit()
             sess.refresh(user)
-        except IntegrityError as e:
+    except IntegrityError as e:
             sess.rollback()
             raise HTTPException(
                 status_code=400,
                 detail="A user with that username or email already exists.",
             )
-        return UserRead.model_validate(user)
+    return UserRead.model_validate(user,from_attributes=True)
 
 def get_user_by_email(email: str) -> User | None:
     with Session(engine) as sess:
