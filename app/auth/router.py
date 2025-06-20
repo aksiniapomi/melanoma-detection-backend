@@ -5,7 +5,6 @@ from fastapi import APIRouter, Depends, HTTPException, status, Body
 from fastapi.security import OAuth2PasswordRequestForm
 from fastapi.security import OAuth2PasswordBearer
 from jose import jwt
-
 from app.auth import service, schemas, dependencies
 from app.auth.schemas import Token
 from app.auth.dependencies import oauth2_scheme
@@ -16,8 +15,10 @@ from app.utils.email import send_email
 from app.auth.service import send_verification_email, verify_email_token, mark_user_verified
 from app.config import settings
 from app.auth.models import User, BlacklistedToken
+from sqlmodel import Session, select
+from app.database import engine
 
-router = APIRouter()
+router = APIRouter(prefix="/auth", tags=["auth"])
 
 @router.post("/register", response_model=schemas.UserRead, status_code=201, summary="Register a new user")
 def register(user_in: schemas.UserCreate):

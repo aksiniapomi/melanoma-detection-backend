@@ -10,6 +10,7 @@ from jose import jwt
 from app.config import settings
 from app.database import engine
 from app.auth.models import User, BlacklistedToken
+from app.auth.service import get_current_user
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/token") #reads authorization header 
 
@@ -57,4 +58,12 @@ def get_current_user(token: str = Depends(oauth2_scheme)) -> User:
                 detail="User not found"
             )
 
+    return user
+
+async def get_current_admin(user=Depends(get_current_user)):
+    if not user.is_admin:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Admin privileges required"
+        )
     return user

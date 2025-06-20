@@ -4,9 +4,8 @@ from fastapi import FastAPI, APIRouter
 from contextlib import asynccontextmanager
 from app.database import init_db
 from app.auth.router import router as auth_router
-from app.config import settings
+from app.auth.admin_router import router as admin_router
 from app.predict.router import router as predict_router
-
 import os
 
 @asynccontextmanager
@@ -41,6 +40,8 @@ app.include_router(debug_router, tags=["debug"])
 app.include_router(auth_router, prefix="/auth", tags=["auth"])
 # include predict endpoint 
 app.include_router(predict_router, prefix="/predict", tags=["predict"])
+
+app.include_router(admin_router, prefix="/admin", tags=["admin"])
 
 @app.get("/", tags=["root"])
 def read_root():
