@@ -6,6 +6,7 @@ from app.database import init_db
 from app.auth.router import router as auth_router
 from app.auth.admin_router import router as admin_router
 from app.predict.router import router as predict_router
+from app.patient.router import router as patient_router
 import os
 
 @asynccontextmanager
@@ -42,6 +43,8 @@ app.include_router(auth_router, prefix="/auth", tags=["auth"])
 app.include_router(predict_router, prefix="/predict", tags=["predict"])
 
 app.include_router(admin_router, prefix="/admin", tags=["admin"])
+
+app.include_router(patient_router)
 
 @app.get("/", tags=["root"])
 def read_root():

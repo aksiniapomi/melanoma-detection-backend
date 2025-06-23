@@ -22,6 +22,7 @@ import app.auth.models       # defines User, BlacklistedToken
 import app.predict.models    # defines Prediction
 from app.predict.models import Prediction
 from app.auth.models import User, BlacklistedToken
+from app.patient.models import Patient
 
 # use the SQLModel metadata for 'autogenerate'
 target_metadata = SQLModel.metadata
