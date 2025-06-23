@@ -26,14 +26,31 @@ def delete_user(user_id: int):
         sess.delete(user)
         sess.commit()
 
-@router.patch("/{user_id}", response_model=UserAdminRead)
-def update_user(user_id: int, changes: UserAdminUpdate):
+
+@router.patch("/{user_id}/promote", response_model=UserAdminRead, summary="Grant admin rights to a user")
+def promote_user(user_id: int):
     with Session(engine) as sess:
         user = sess.get(User, user_id)
         if not user:
-            raise HTTPException(404, "User not found")
-        data = changes.model_dump(exclude_none=True)
-        for k,v in data.items():
-            setattr(user, k, v)
-        sess.add(user); sess.commit(); sess.refresh(user)
+            raise HTTPException(status_code=404, detail="User not found")
+        if user.is_admin:
+            raise HTTPException(status_code=400, detail="User is already an admin")
+        user.is_admin = True
+        sess.add(user)
+        sess.commit()
+        sess.refresh(user)
+        return user
+
+@router.patch("/{user_id}/demote", response_model=UserAdminRead, summary="Revoke admin rights from a user")
+def demote_user(user_id: int):
+    with Session(engine) as sess:
+        user = sess.get(User, user_id)
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+        if not user.is_admin:
+            raise HTTPException(status_code=400, detail="User is not an admin")
+        user.is_admin = False
+        sess.add(user)
+        sess.commit()
+        sess.refresh(user)
         return user
