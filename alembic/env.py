@@ -20,10 +20,11 @@ if config.config_file_name is not None:
 from sqlmodel import SQLModel
 import app.auth.models       # defines User, BlacklistedToken
 import app.predict.models    # defines Prediction
+from app.predict.models import Prediction
+from app.auth.models import User, BlacklistedToken
 
 # use the SQLModel metadata for 'autogenerate'
 target_metadata = SQLModel.metadata
-
 
 def run_migrations_offline() -> None:
     url = config.get_main_option("sqlalchemy.url")
