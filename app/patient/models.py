@@ -1,12 +1,14 @@
 from sqlmodel import SQLModel, Field, Relationship
-from typing import Optional, List, TYPE_CHECKING
 from datetime import date
+from typing import Optional, List, TYPE_CHECKING
 from sqlalchemy import Column, Text
 
 if TYPE_CHECKING:
     from app.predict.models import Prediction
 
 class Patient(SQLModel, table=True):
+    __tablename__ = "patient"
+
     id: Optional[int] = Field(default=None, primary_key=True)
     first_name: str
     last_name: str
@@ -14,11 +16,9 @@ class Patient(SQLModel, table=True):
     email: Optional[str] = Field(default=None, index=True)
     phone: Optional[str] = None
     notes: Optional[str] = None
-
-     # free‐form TEXT column for symptoms
     symptoms: Optional[str] = Field(
-        default=None,
         sa_column=Column("symptoms", Text, nullable=True),
+        default=None,
     )
-    
-    predictions:  List["Prediction"] = Relationship(back_populates="patient")
+
+    predictions: List["Prediction"] = Relationship(back_populates="patient")

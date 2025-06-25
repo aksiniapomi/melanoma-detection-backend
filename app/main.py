@@ -37,14 +37,16 @@ def dump_env():
 
 app.include_router(debug_router, tags=["debug"])
 
+# Mount patient routes at /patients
+app.include_router(patient_router, prefix="/patients", tags=["patients"])
+
 # include authentication endpoints
 app.include_router(auth_router, prefix="/auth", tags=["auth"])
+
 # include predict endpoint 
 app.include_router(predict_router, prefix="/predict", tags=["predict"])
 
 app.include_router(admin_router, prefix="/admin", tags=["admin"])
-
-app.include_router(patient_router)
 
 @app.get("/", tags=["root"])
 def read_root():

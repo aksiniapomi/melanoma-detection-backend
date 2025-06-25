@@ -4,9 +4,14 @@ from app.auth.dependencies import get_current_user
 from app.predict.schemas import PredictionOut
 from app.predict import service as predict_service
 
-router = APIRouter()
+router = APIRouter(
+    prefix="/patients/{patient_id}/predictions",
+    tags=["predictions"],
+    dependencies=[Depends(get_current_user)],
+)
 
 @router.post("/", response_model=PredictionOut, summary="Upload image and get melanoma probability")
+
 async def predict(
     image: UploadFile = File(...),
     current_user=Depends(get_current_user) #only logged-in users can call /predict 

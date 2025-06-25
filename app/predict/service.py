@@ -1,7 +1,7 @@
 
 from sqlmodel import Session
 from app.database import engine
-from app.models import Prediction
+from app.predict.models import Prediction
 
 def save_prediction(user_id: int, label: str, probability: float) -> Prediction:
     """

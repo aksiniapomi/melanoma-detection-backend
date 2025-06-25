@@ -1,53 +1,69 @@
-import json
 from sqlmodel import Session, select
+from fastapi import HTTPException
+from sqlalchemy.orm import selectinload
+
 from app.database import engine
-from app.patient import schemas
 from app.patient.models import Patient
-from app.patient.schemas import PatientCreate
+from app.patient.schemas import PatientCreate, PatientUpdate
+
 
 def create_patient(data: PatientCreate) -> Patient:
     payload = data.model_dump()
-    # turn the Python list into a JSON string
-    payload["symptoms"] = json.dumps(payload.get("symptoms", []))
+    # convert list of symptoms into comma-separated string
+    payload["symptoms"] = ", ".join(payload.get("symptoms", []) or [])
+
     patient = Patient(**payload)
     with Session(engine) as sess:
         sess.add(patient)
         sess.commit()
         sess.refresh(patient)
-        patient.symptoms = json.loads(patient.symptoms or "[]")
         return patient
+
 
 def get_patient(patient_id: int) -> Patient | None:
     with Session(engine) as sess:
-        patient = sess.get(Patient, patient_id)
-        if patient:
-            patient.symptoms = json.loads(patient.symptoms or "[]")
-        return patient
+        stmt = (
+            select(Patient)
+            .where(Patient.id == patient_id)
+            .options(selectinload(Patient.predictions))
+        )
+        return sess.exec(stmt).first()
+
 
 def list_patients(skip: int = 0, limit: int = 100) -> list[Patient]:
     with Session(engine) as sess:
-        patients = sess.exec(select(Patient).offset(skip).limit(limit)).all()
-    for p in patients:
-        p.symptoms = json.loads(p.symptoms or "[]")
-    return patients
+        stmt = (
+            select(Patient)
+            .options(selectinload(Patient.predictions))
+            .offset(skip)
+            .limit(limit)
+        )
+        return sess.exec(stmt).all()
+
 
 def update_patient(patient_id: int, changes: dict) -> Patient:
-    # serialize incoming list
+    # if updating symptoms, convert list to comma-separated string
     if "symptoms" in changes:
-        changes["symptoms"] = json.dumps(changes["symptoms"] or [])
+        changes["symptoms"] = ", ".join(changes.get("symptoms", []) or [])
+
     with Session(engine) as sess:
         patient = sess.get(Patient, patient_id)
-        for k, v in changes.items():
-            setattr(patient, k, v)
+        if not patient:
+            raise HTTPException(status_code=404, detail="Patient not found")
+
+        for field, value in changes.items():
+            setattr(patient, field, value)
+
         sess.add(patient)
         sess.commit()
         sess.refresh(patient)
-        # _deserialize_ for the response
-        patient.symptoms = json.loads(patient.symptoms or "[]")
         return patient
+
 
 def delete_patient(patient_id: int) -> None:
     with Session(engine) as sess:
         patient = sess.get(Patient, patient_id)
-        sess.delete(patient)
-        sess.commit()
+        if patient:
+            sess.delete(patient)
+            sess.commit()
+
