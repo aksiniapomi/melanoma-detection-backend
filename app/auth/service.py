@@ -15,6 +15,7 @@ from app.utils.email  import send_email
 from app.auth.schemas import UserRead
 from sqlalchemy.exc import IntegrityError
 from fastapi import HTTPException
+from app.auth.security import get_jti
 
 pwd_ctx = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -46,6 +47,12 @@ def create_user(username: str, email: str, password: str) -> UserRead:
                 detail="A user with that username or email already exists.",
             )
     return UserRead.model_validate(user,from_attributes=True)
+
+def authenticate(username: str, password: str) -> User | None:
+    user = get_user(username)
+    if not user or not verify_password(password, user.hashed_password):
+        return None
+    return user
 
 def get_user_by_email(email: str) -> User | None:
     with Session(engine) as sess:
@@ -145,3 +152,28 @@ def revoke_token(jti: str) -> BlacklistedToken:
         sess.commit()
         sess.refresh(bl)
     return bl
+
+def save_refresh_jti(user_id: int, refresh_token: str):
+    """
+    Persist the new refresh-token’s JTI 
+    """
+    from app.auth.security import decode_token
+    claims = decode_token(refresh_token)
+    jti = get_jti(claims)
+    with Session(engine) as sess:
+        sess.add(BlacklistedToken(jti=jti))
+        sess.commit()
+
+def is_jti_blacklisted(jti: str) -> bool:
+    with Session(engine) as sess:
+        stmt = select(BlacklistedToken).where(BlacklistedToken.jti == jti)
+        return sess.exec(stmt).first() is not None
+
+def blacklist_jti(jti: str):
+    # alias for revoke_token
+    from fastapi import HTTPException
+    if is_jti_blacklisted(jti):
+        return  # already there
+    with Session(engine) as sess:
+        sess.add(BlacklistedToken(jti=jti))
+        sess.commit()

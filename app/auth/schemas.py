@@ -16,10 +16,19 @@ class UserRead(BaseModel):
     username: str
     email: str
 
+class LoginIn(BaseModel):
+    username: str
+    password: str    
+
 #jwt response 
 class Token(BaseModel):
     access_token: str
     token_type: str = "bearer"
+    
+class TokenOut(BaseModel):
+    access_token:  str
+    refresh_token: str
+    token_type:    str  = "bearer"    
     
 class UserAdminRead(BaseModel):
     id: int
@@ -34,3 +43,6 @@ class UserAdminRead(BaseModel):
 class UserAdminUpdate(BaseModel):
     is_verified: bool | None = None
     is_admin: bool | None = None
+
+class RefreshIn(BaseModel):
+    refresh_token: str
