@@ -6,7 +6,6 @@ from app.predict import service as predict_service
 
 router = APIRouter(
     prefix="/patients/{patient_id}/predictions",
-    tags=["predictions"],
     dependencies=[Depends(get_current_user)],
 )
 

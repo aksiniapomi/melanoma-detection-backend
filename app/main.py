@@ -44,7 +44,7 @@ app.include_router(patient_router, prefix="/patients", tags=["patients"])
 app.include_router(auth_router, prefix="/auth", tags=["auth"])
 
 # include predict endpoint 
-app.include_router(predict_router, prefix="/predict", tags=["predict"])
+app.include_router(predict_router, prefix="/predict", tags=["predictions"])
 
 app.include_router(admin_router, prefix="/admin", tags=["admin"])
 
