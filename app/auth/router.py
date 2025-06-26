@@ -84,7 +84,7 @@ def login(data: LoginIn):
     refresh = create_refresh_token(subject=str(user.id))
 
     # Persist the refresh‐token’s JTI 
-    auth_svc.save_refresh_jti(user.id, refresh)
+    # auth_svc.save_refresh_jti(user.id, refresh)
 
     return {
         "access_token":  access,
