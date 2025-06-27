@@ -7,14 +7,22 @@ from app.auth.router import router as auth_router
 from app.auth.admin_router import router as admin_router
 from app.predict.router import router as predict_router
 from app.patient.router import router as patient_router
+from app.middleware.rate_limiter import RateLimiterMiddleware
 import os
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup: create SQLite tables
     init_db()
-    yield      # <-- the application runs here; hand-off point between setup and teardown in the context-manager pattern
+    yield      #the application runs here; hand-off point between setup and teardown in the context-manager pattern
     # Shutdown: any teardown logic here
+
+# per-path limits 
+rate_limit_rules = {
+    "/auth/login":    (5,   60),    # max 5 login attempts per minute
+    "/auth/refresh":  (10,  60),    # max 10 refreshes per minute
+    "/predict":       (20, 3600),   # max 20 predictions per hour
+}
 
 app = FastAPI(
     title="Melanoma Detection API",
@@ -36,6 +44,9 @@ def dump_env():
     }
 
 app.include_router(debug_router, tags=["debug"])
+
+#rate-limiter middleware
+app.add_middleware(RateLimiterMiddleware, rules=rate_limit_rules)
 
 # Mount patient routes at /patients
 app.include_router(patient_router, prefix="/patients", tags=["patients"])
