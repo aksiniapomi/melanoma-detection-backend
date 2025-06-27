@@ -11,17 +11,25 @@ from app.config import settings
 from app.database import engine
 from app.auth.models import User, BlacklistedToken
 from app.auth.schemas import Token
+from app.auth import service as auth_svc
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/token") #reads authorization header 
 
 def get_current_user(token: str = Depends(oauth2_scheme)) -> User:
-   
     try:
-        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM], options={"require": ["sub", "exp", "jti", "iat"]})
-        username: str = payload.get("sub")
+        payload = jwt.decode(
+            token,
+            settings.SECRET_KEY,
+            algorithms=[settings.ALGORITHM],
+            options={"require": ["sub", "exp", "jti", "iat"]}
+        )
+        # our sub claim is the user ID, so parse it
+        sub = int(payload.get("sub"))
         jti = payload.get("jti")
-        if not username or not jti:
+        if sub is None or jti is None:
             raise JWTError("Missing sub or jti claims")
+        # sub is user ID
+        user_id = int(sub)
     except ExpiredSignatureError:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, 
@@ -50,14 +58,13 @@ def get_current_user(token: str = Depends(oauth2_scheme)) -> User:
         # fetch user
     with Session(engine) as sess:
         user = sess.exec(
-            select(User).where(User.username == username)
+            select(User).where(User.id == user_id)
         ).one_or_none()
         if not user:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="User not found"
             )
-
     return user
 
 async def get_current_admin(user=Depends(get_current_user)):

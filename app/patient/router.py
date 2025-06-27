@@ -3,7 +3,10 @@ from app.auth.dependencies import get_current_user
 from app.patient import service, schemas
 from typing import List
 
-router = APIRouter()
+router = APIRouter(
+    tags=["patients"],
+    dependencies=[Depends(get_current_user)],   #Require login for all patient routes
+)
 
 @router.post("/", response_model=schemas.PatientRead, status_code=status.HTTP_201_CREATED)
 def create_patient(data: schemas.PatientCreate):
