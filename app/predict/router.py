@@ -3,6 +3,10 @@ from fastapi import APIRouter, UploadFile, File, HTTPException, Depends
 from app.auth.dependencies import get_current_user
 from app.predict.schemas import PredictionOut
 from app.predict import service as predict_service
+from pathlib import Path 
+
+ALLOWED_EXT = {".jpg", ".jpeg", ".png", ".bmp"}
+MAX_FILE_SIZE = 5 * 1024 * 1024   # 5 MB
 
 router = APIRouter(
     prefix="/patients/{patient_id}/predictions",
@@ -21,11 +25,14 @@ async def predict(
     Persists each call to the sqlite database 
     """
     # verify file type
-    if image.content_type.split("/")[0] != "image":
-        raise HTTPException(400, "Please upload a valid image file")
+    ext = Path(image.filename).suffix.lower()
+    if ext not in ALLOWED_EXT:
+        raise HTTPException(400, f"Unsupported file extension {ext}. Please upload a valid image file")
   
-    # Read bytes (real ML here later)
+    # Read bytes (real ML here later); enforce the file size 
     img_bytes = await image.read()
+    if len(img_bytes) > MAX_FILE_SIZE:
+        raise HTTPException(413, "File too large (max 5 MB)")
     #ML model goes here 
 
     # dummy inference 
