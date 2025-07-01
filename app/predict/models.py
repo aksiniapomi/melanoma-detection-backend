@@ -11,7 +11,7 @@ if TYPE_CHECKING:
 class Prediction(SQLModel, table=True):
     __tablename__ = "prediction"
 
-    id: int = Field(default_factory=lambda: uuid4().int, primary_key=True)
+    id: Optional[int] = Field(default=None, primary_key=True)
     user_id: int = Field(foreign_key="user.id", nullable=False)
     patient_id: int = Field(foreign_key="patient.id", nullable=False)
     timestamp: datetime = Field(sa_column_kwargs={"server_default": func.now()}, nullable=False)

@@ -7,7 +7,7 @@ from datetime import datetime
 from uuid import UUID
 
 class PredictionOut(BaseModel):
-    id: UUID
+    id: int
     user_id: int
     patient_id: int
     timestamp: datetime

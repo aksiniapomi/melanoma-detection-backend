@@ -10,15 +10,18 @@ MAX_FILE_SIZE = 5 * 1024 * 1024   # 5 MB
 
 router = APIRouter(
     prefix="/patients/{patient_id}/predictions",
+    tags=["predictions"],
     dependencies=[Depends(get_current_user)],
 )
 
 @router.post("/", response_model=PredictionOut, summary="Upload image and get melanoma probability")
 
 async def predict(
+    patient_id: int,                             
     image: UploadFile = File(...),
-    current_user=Depends(get_current_user) #only logged-in users can call /predict 
+    current_user=Depends(get_current_user) #only logged in users can call /predict 
 ):
+    
     """
     Stub /predict endpoint.
     Accepts an image upload and returns a dummy melanoma probability.
@@ -42,6 +45,7 @@ async def predict(
 # Persist to SQLite 
     pred = predict_service.save_prediction(
         user_id=current_user.id,
+        patient_id=patient_id,
         label=label,
         probability=prob
     )
