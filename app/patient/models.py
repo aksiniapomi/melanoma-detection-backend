@@ -1,4 +1,4 @@
-from sqlmodel import SQLModel, Field, Relationship
+from sqlmodel import SQLModel, Field, Relationship, ForeignKey
 from datetime import date
 from typing import Optional, List, TYPE_CHECKING
 from sqlalchemy import Column, Text
@@ -10,6 +10,8 @@ class Patient(SQLModel, table=True):
     __tablename__ = "patient"
 
     id: Optional[int] = Field(default=None, primary_key=True)
+    owner_id: int     = Field(foreign_key="user.id", nullable=False, index=True)
+    
     first_name: str
     last_name: str
     date_of_birth: date

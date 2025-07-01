@@ -6,9 +6,9 @@ from app.database import engine
 from app.patient.models import Patient
 from app.patient.schemas import PatientCreate, PatientUpdate
 
-
-def create_patient(data: PatientCreate) -> Patient:
+def create_patient(data: PatientCreate, owner_id: int) -> Patient:
     payload = data.model_dump()
+    payload["owner_id"] = owner_id
     # convert list of symptoms into comma-separated string
     payload["symptoms"] = ", ".join(payload.get("symptoms", []) or [])
 
@@ -17,7 +17,7 @@ def create_patient(data: PatientCreate) -> Patient:
         sess.add(patient)
         sess.commit()
         sess.refresh(patient)
-        return patient
+        return get_patient(patient.id)
 
 
 def get_patient(patient_id: int) -> Patient | None:
@@ -29,8 +29,9 @@ def get_patient(patient_id: int) -> Patient | None:
         )
         return sess.exec(stmt).first()
 
-
 def list_patients(skip: int = 0, limit: int = 100) -> list[Patient]:
+    
+    # List all patients (for admins)
     with Session(engine) as sess:
         stmt = (
             select(Patient)
@@ -40,6 +41,19 @@ def list_patients(skip: int = 0, limit: int = 100) -> list[Patient]:
         )
         return sess.exec(stmt).all()
 
+
+def list_patients_for_owner(owner_id: int, skip: int = 0, limit: int = 100) -> list[Patient]:
+    
+    #List only patients belonging to a specific owner.
+    with Session(engine) as sess:
+        stmt = (
+            select(Patient)
+            .where(Patient.owner_id == owner_id)
+            .options(selectinload(Patient.predictions))
+            .offset(skip)
+            .limit(limit)
+        )
+        return sess.exec(stmt).all()
 
 def update_patient(patient_id: int, changes: dict) -> Patient:
     # if updating symptoms, convert list to comma-separated string
@@ -57,7 +71,7 @@ def update_patient(patient_id: int, changes: dict) -> Patient:
         sess.add(patient)
         sess.commit()
         sess.refresh(patient)
-        return patient
+        return get_patient(patient_id)
 
 
 def delete_patient(patient_id: int) -> None:
