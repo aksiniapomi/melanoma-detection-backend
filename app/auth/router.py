@@ -1,15 +1,13 @@
-
 #HTTP endpoints under /auth 
-
-from fastapi import APIRouter, Depends, HTTPException, status, Body 
+from jose import JWTError
+from fastapi import APIRouter, Depends, HTTPException, status, Body, BackgroundTasks, Query 
 from fastapi.security import OAuth2PasswordRequestForm, OAuth2PasswordBearer
 from jose import jwt, JWTError
 from app.auth.schemas import Token
 from app.auth.service import revoke_token
 from app.auth.dependencies import get_current_admin
-from app.auth.service import get_user_by_email, create_email_token
-from app.utils.email import send_email
-from app.auth.service import send_verification_email, verify_email_token, mark_user_verified
+from app.auth.service import get_user_by_email
+from app.auth.service import send_verification_email, mark_user_verified
 from app.config import settings
 from app.auth.models import User, BlacklistedToken
 from sqlmodel import Session, select
@@ -28,18 +26,25 @@ from app.auth.security import (
 router = APIRouter(tags=["auth"])
 
 @router.post("/register", response_model=schemas.UserRead, status_code=201, summary="Register a new user")
-def register(user_in: schemas.UserCreate):
+def register(
+    user_in: schemas.UserCreate,
+    background_tasks: BackgroundTasks
+    ):
     if service.get_user(user_in.username):
         raise HTTPException(400, "Username already registered")
     user = service.create_user(user_in.username, user_in.email, user_in.password)
+    
+    # schedule the “please verify” email
+    background_tasks.add_task(service.send_verification_email, user.email)
+    
     return user
 
 @router.post(
-    "/verify/send",
+    "/verify/resend",
     status_code=status.HTTP_200_OK,
-    summary="Send a one-time email verification link/token",
+    summary="Resend email verification link",
 )
-def send_verification(email: str = Body(..., embed=True)):
+def resend_verification(email: str = Body(..., embed=True)):
     """
     Generates a short-lived 'email_verify' JWT and STUB-sends it by logging.
     """
@@ -52,18 +57,18 @@ def send_verification(email: str = Body(..., embed=True)):
     token = send_verification_email(email)
     return {"message": "Verification email sent", "token": token}
 
-@router.post(
-    "/verify",
+@router.get(
+    "/verify-email",
     status_code=status.HTTP_200_OK,
-    summary="Consume a verification token and mark email as verified",
+    summary="Verify email via token link",
 )
-def verify_email(token: str = Body(..., embed=True)):
+def verify_email(token: str = Query(..., description="Email verify JWT")):
     """
     User submits the token they received; we decode & flip `is_verified`.
     """
     try:
         email = service.verify_email_token(token)
-    except Exception:
+    except JWTError:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, detail="Invalid or expired token")
 
     user = service.mark_user_verified(email)
@@ -79,7 +84,13 @@ def login(data: LoginIn):
     user = auth_svc.authenticate(data.username, data.password)
     if not user:
         raise HTTPException(401, "Invalid credentials")
-
+    
+    #unverified users 
+    if not user.is_verified:
+        raise HTTPException(
+        status_code=status.HTTP_403_FORBIDDEN,
+        detail="Please verify your email before logging in."
+    )
     access  = create_access_token(subject=str(user.id))
     refresh = create_refresh_token(subject=str(user.id))
 

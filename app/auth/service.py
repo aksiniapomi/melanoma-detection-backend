@@ -58,19 +58,6 @@ def get_user_by_email(email: str) -> User | None:
     with Session(engine) as sess:
         return sess.exec(select(User).where(User.email == email)).first()
 
-def create_email_token(subject: str) -> str:
-    now = datetime.now(timezone.utc)
-    expire = now + timedelta(minutes=settings.EMAIL_TOKEN_EXPIRE_MINUTES)
-    jti = str(uuid4())
-    payload = {
-        "sub": subject,
-        "exp": expire,
-        "iat": now,
-        "jti": jti,
-        "scope": "email_verify"
-    }
-    return jwt.encode(payload, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
-
 #check the password against the bcrypt hash 
 def verify_password(plain: str, hashed: str) -> bool:
     return pwd_ctx.verify(plain, hashed)
