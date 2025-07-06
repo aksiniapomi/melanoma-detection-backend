@@ -1,9 +1,12 @@
 
-from fastapi import APIRouter, UploadFile, File, HTTPException, Depends
+from fastapi import APIRouter, UploadFile, File, HTTPException, Depends, Query
 from app.auth.dependencies import get_current_user
 from app.predict.schemas import PredictionOut
 from app.predict import service as predict_service
 from pathlib import Path 
+from typing import List 
+from app.patient import service as patient_service
+from app.auth.dependencies import get_current_user
 
 ALLOWED_EXT = {".jpg", ".jpeg", ".png", ".bmp"}
 MAX_FILE_SIZE = 5 * 1024 * 1024   # 5 MB
@@ -60,3 +63,23 @@ async def predict(
   "probability": 0.42
 }
 """
+
+@router.get(
+    "/",
+    response_model=List[PredictionOut],
+    summary="List past predictions for a patient",
+)
+def read_predictions(
+    patient_id: int,
+    skip: int = Query(0, ge=0),
+    limit: int = Query(100, ge=1, le=500),
+    current_user=Depends(get_current_user),
+):
+    #enforce that current_user may view this patient:
+    patient = patient_service.get_patient(patient_id)
+    if not patient:
+        raise HTTPException(404, "Patient not found")
+    if not current_user.is_admin and patient.owner_id != current_user.id:
+        raise HTTPException(403, "Not authorized to view these predictions")
+
+    return predict_service.list_predictions(patient_id, skip=skip, limit=limit)

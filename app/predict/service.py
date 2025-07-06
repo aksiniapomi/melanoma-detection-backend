@@ -1,9 +1,10 @@
 
-from sqlmodel import Session
+from sqlmodel import Session, select 
 from app.database import engine
 from app.predict.models import Prediction
 from sqlalchemy.exc import IntegrityError
 import logging
+from typing import List 
 
 logger = logging.getLogger("uvicorn.error")
 
@@ -43,3 +44,17 @@ def save_prediction(
         # pull back the db generated id and timestamp into pred object 
         session.refresh(pred)
         return pred
+
+def list_predictions(
+    patient_id: int,
+    skip: int = 0,
+    limit: int = 100,
+) -> List[Prediction]:
+    with Session(engine) as session:
+        stmt = (
+            select(Prediction)
+            .where(Prediction.patient_id == patient_id)
+            .offset(skip)
+            .limit(limit)
+        )
+        return session.exec(stmt).all()
