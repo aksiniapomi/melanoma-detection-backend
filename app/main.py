@@ -1,6 +1,7 @@
 #wires everything into a live FastAPI server; mounts routers and runs the database 
 
 from fastapi import FastAPI, APIRouter
+from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 from app.database import init_db
 from app.auth.router import router as auth_router
@@ -29,6 +30,19 @@ app = FastAPI(
     description="Upload dermoscopic images and receive melanoma probability scores",
     version="0.1.0",
     lifespan=lifespan
+)
+
+#CORS 
+origins = [
+    "http://localhost:3000",  # React/Vue dev server
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,                    
+    allow_credentials=True,
+    allow_methods=["*"],                      # GET, POST, etc
+    allow_headers=["*"],                      # Authorization, Content-Type, etc
 )
 
 debug_router = APIRouter()
