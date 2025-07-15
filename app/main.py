@@ -76,3 +76,9 @@ app.include_router(admin_router, prefix="/admin", tags=["admin"])
 @app.get("/", tags=["root"])
 def read_root():
     return {"message": "Welcome to the Melanoma Detection API"}
+
+@app.get("/health", tags=["health"], summary="Liveness check")
+def health_check():
+    #Health endpoint. Returns 200 OK if the app is running.
+    
+    return {"status": "ok"}
