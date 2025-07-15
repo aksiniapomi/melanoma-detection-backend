@@ -40,7 +40,9 @@ jobs:
           flake8 app tests \
             --max-line-length=120 \
             --extend-ignore=F401,W291,E302,E501,W293,E265,E114,E304,E122,E125,E221,E231
-
+          flake8 app tests \
+           --max-line-length=120 \
+           --exit-zero
       - name: Type check with mypy
         run: |
           mypy app --ignore-missing-imports
