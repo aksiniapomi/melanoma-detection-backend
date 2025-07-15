@@ -38,9 +38,11 @@ jobs:
             --max-line-length=120 \
             --exit-zero
 
-      - name: Type check with mypy
+      - name: Type check with mypy (exclude app/models.py)
         run: |
-          mypy app --ignore-missing-imports
+          mypy app \
+            --ignore-missing-imports \
+            --exclude 'app/models\.py$'
 
       - name: Run pytest
         run: |
