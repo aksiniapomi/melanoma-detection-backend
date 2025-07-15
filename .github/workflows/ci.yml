@@ -38,9 +38,9 @@ jobs:
             --max-line-length=120 \
             --exit-zero
 
-      - name: Ensure `__init__.py` in patient & predict
+      - name: Ensure `app`, `patient`, and `predict` are packages
         run: |
-          # Make these real packages so MyPy sees them under app.patient.models, app.predict.models
+          touch app/__init__.py
           touch app/patient/__init__.py
           touch app/predict/__init__.py
 
