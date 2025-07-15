@@ -38,11 +38,16 @@ jobs:
             --max-line-length=120 \
             --exit-zero
 
-      - name: Type check with mypy (exclude app/models.py)
+      - name: Ensure `__init__.py` in patient & predict
+        run: |
+          # Make these real packages so MyPy sees them under app.patient.models, app.predict.models
+          touch app/patient/__init__.py
+          touch app/predict/__init__.py
+
+      - name: Type check with mypy
         run: |
           mypy app \
-            --ignore-missing-imports \
-            --exclude 'app/models\.py$'
+            --ignore-missing-imports
 
       - name: Run pytest
         run: |
