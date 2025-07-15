@@ -1,0 +1,15 @@
+version: "3.8"
+services:
+  backend:
+    build: .
+    image: melanoma-backend:latest
+    ports:
+      - "8000:8000"
+    environment:
+      - SMTP_HOST=${SMTP_HOST}
+      - SMTP_PORT=${SMTP_PORT}
+      - SMTP_USER=${SMTP_USER}
+      - SMTP_PASS=${SMTP_PASS}
+      - EMAIL_FROM_ADDRESS=${EMAIL_FROM_ADDRESS}
+    volumes:
+      - .:/app       # for code changes to reload
