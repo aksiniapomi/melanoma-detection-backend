@@ -1,30 +1,19 @@
-# start from a small, official Python image
+# Dockerfile
 FROM python:3.11-slim
 
-# prevent Python from writing .pyc files and buffering stdout/stderr
-ENV PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1
-
-# set working dir
+# set a deterministic working directory
 WORKDIR /app
 
-# install OS deps 
-RUN apt-get update \
- && apt-get install -y --no-install-recommends gcc \
- && rm -rf /var/lib/apt/lists/*
-
-# copy and install Python dependencies
-COPY pyproject.toml poetry.lock* /app/
+# copy & install Python dependencies
+COPY requirements.txt .
 RUN pip install --upgrade pip \
- && pip install poetry \
- && poetry config virtualenvs.create false \
- && poetry install --no-dev --no-root
+    && pip install -r requirements.txt
 
-# copy your application code
-COPY . /app
+# copy in the rest of your application
+COPY . .
 
-# expose the port FastAPI uses
+# expose the port uvicorn will run on
 EXPOSE 8000
 
-# default command
+# default startup command
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
