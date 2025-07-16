@@ -22,25 +22,21 @@ def read_patients(
     limit: int = 100,
     current_user = Depends(get_current_user),
 ):
-    
-    #List patients: all if admin, else only those owned by the user
-    
-    if current_user.is_admin:
-        return service.list_patients(skip, limit)
-    return service.list_patients_for_owner(current_user.id, skip, limit)
+
+    #Return all patients, regardless of owner.
+
+   return service.list_patients(skip, limit)
 
 @router.get("/{patient_id}", response_model=schemas.PatientRead)
 def read_patient(
     patient_id: int,
     current_user = Depends(get_current_user),
 ):
-    #Fetch a single patient, enforcing owner/admin permissions
+    #Fetch a single patient
     
     patient = service.get_patient(patient_id)
     if not patient:
         raise HTTPException(status_code=404, detail="Patient not found")
-    if not current_user.is_admin and patient.owner_id != current_user.id:
-        raise HTTPException(status_code=403, detail="Not authorized to view this patient")
     return patient
 
 @router.patch("/{patient_id}", response_model=schemas.PatientRead)
