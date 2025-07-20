@@ -1,6 +1,8 @@
-#Train each on ResNet Features and point out accuracy ROC AUC and full classification report 
+# Train each on ResNet Features and point out accuracy, ROC AUC and full classification report
 # 5 classifiers to test 
+import argparse
 import numpy as np
+import joblib
 from sklearn.linear_model import LogisticRegression
 from sklearn.svm import SVC
 from sklearn.ensemble import RandomForestClassifier
@@ -15,7 +17,7 @@ def load_data(npz_path="data/cnn_features.npz"):
     return X_train, y_train, X_test, y_test
 
 def evaluate_model(model, X_train, y_train, X_test, y_test):
-    model.fit(X_train, y_train) #the robot studies which fingerprint patterns go with “benign” vs “malignant”
+    model.fit(X_train, y_train)  # the robot studies which fingerprint patterns go with “benign” vs “malignant”
     preds = model.predict(X_test)
     probs = model.predict_proba(X_test)[:,1] if hasattr(model, "predict_proba") else None
 
@@ -28,22 +30,39 @@ def evaluate_model(model, X_train, y_train, X_test, y_test):
         preds,
         target_names=["benign", "malignant"], 
         digits=4
-        ))
+    ))
     print("="*40)
 
-#in-built classifiers 
+#  map command‑line names to actual model instances
+MODEL_MAP = {
+    "logistic": LogisticRegression(max_iter=1000),
+    "svm":      SVC(kernel="linear", probability=True),
+    "rf":       RandomForestClassifier(n_estimators=100),
+    "knn":      KNeighborsClassifier(n_neighbors=5),
+    "dt":       DecisionTreeClassifier(),
+}
+
 def main():
+    # argument parsing 
+    p = argparse.ArgumentParser(description="Train & save one classifier")
+    p.add_argument("--model",
+                   choices=MODEL_MAP.keys(),
+                   required=True,
+                   help="Which model to train: " + ", ".join(MODEL_MAP.keys()))
+    p.add_argument("--save-path",
+                   required=True,
+                   help="Where to dump the trained model (e.g. ml_models/logistic_final.joblib)")
+    args = p.parse_args()
+
     X_train, y_train, X_test, y_test = load_data()
-    models = [
-        LogisticRegression(max_iter=1000),
-        SVC(kernel="linear", probability=True),
-        RandomForestClassifier(n_estimators=100),
-        KNeighborsClassifier(n_neighbors=5),
-        DecisionTreeClassifier(),
-    ]
+    clf = MODEL_MAP[args.model]
 
-    for m in models:
-        evaluate_model(m, X_train, y_train, X_test, y_test)
+    # train + print metrics
+    evaluate_model(clf, X_train, y_train, X_test, y_test)
 
+    # save the trained classifier
+    print(f"Saving trained {args.model} model to {args.save_path}…")
+    joblib.dump(clf, args.save_path)
+ 
 if __name__ == "__main__":
     main()
