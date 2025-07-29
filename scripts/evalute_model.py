@@ -5,11 +5,11 @@ from sklearn.metrics import accuracy_score, roc_auc_score, classification_report
 
 def main(model_path, features_path="data/cnn_features.npz"):
     # load trained model
-    model = joblib.load(model_path)
+    model = joblib.load(model_path) #loads serialised model 
 
     # load held‑out features
     data = np.load(features_path)
-    X_test, y_test = data["X_test"], data["y_test"]
+    X_test, y_test = data["X_test"], data["y_test"] #reads features 
 
     # predict & score
     preds = model.predict(X_test)
