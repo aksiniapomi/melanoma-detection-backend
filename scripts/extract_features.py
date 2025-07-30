@@ -2,12 +2,14 @@ import os #field and folder operations
 import torch # core PyTorch library 
 import numpy as np #hold arrays on the CPU and save them later on 
 from torchvision import models, transforms # Pretrained CNN like ResNet; image preprocessing steps (resize, normalise, etc) 
+from torchvision.models import ResNet50_Weights
 from PIL import Image #load JPEG/PNG files 
 from tqdm import tqdm #progress bar wrapper 
 
 # Set up the pre‑trained model ResNet50
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-resnet = models.resnet50(pretrained=True) #pre-trained 50-layer ResNet trained on ImageNet 
+#resnet = models.resnet50(pretrained=True) #pre-trained 50-layer ResNet trained on ImageNet 
+resnet = models.resnet50(weights=ResNet50_Weights.IMAGENET1K_V1) #newer version of depricated one above
 resnet.fc = torch.nn.Identity()   # replace final fully‑connected layer; classification layer  # type: ignore[assignment]
 resnet = resnet.to(device).eval() #move to GPU/CPU to set inference mode; content feature extraction 
 
