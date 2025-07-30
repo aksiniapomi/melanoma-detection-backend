@@ -26,3 +26,6 @@ for src, label in [(SRC_BENIGN, "benign"), (SRC_MELANO, "malignant")]:
                         os.path.join(OUT, split, label, f))
 
 print("Original dataset train/test ready under", OUT)
+
+
+
