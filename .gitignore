@@ -1,0 +1,27 @@
+# Python environment
+.venv/
+
+# env vars
+env/
+
+# caches
+__pycache__/
+*.pyc
+
+# Environment files
+.env
+
+# model artifacts
+ml_models/
+
+# extracted data
+data/
+
+# images & arrays
+*.jpg
+*.jpeg
+*.png
+*.npz
+
+# joblib models
+*.joblib
