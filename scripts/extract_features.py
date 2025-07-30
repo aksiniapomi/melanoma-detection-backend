@@ -1,4 +1,4 @@
-import os #fiel and fodler operations 
+import os #field and folder operations 
 import torch # core PyTorch library 
 import numpy as np #hold arrays on the CPU and save them later on 
 from torchvision import models, transforms # Pretrained CNN like ResNet; image preprocessing steps (resize, normalise, etc) 
@@ -8,7 +8,7 @@ from tqdm import tqdm #progress bar wrapper
 # Set up the pre‑trained model ResNet50
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 resnet = models.resnet50(pretrained=True) #pre-trained 50-layer ResNet trained on ImageNet 
-resnet.fc = torch.nn.Identity()   # replace final fully‑connected layer; classification layer 
+resnet.fc = torch.nn.Identity()   # replace final fully‑connected layer; classification layer  # type: ignore[assignment]
 resnet = resnet.to(device).eval() #move to GPU/CPU to set inference mode; content feature extraction 
 
 # Define the image transforms to match ResNet’s training
@@ -35,7 +35,7 @@ def extract_split(split_dir):
             img = Image.open(path).convert("RGB")
             
             #preprocess and add batch dimension 
-            inp = tfm(img).unsqueeze(0).to(device)   # shape: [1,3,224,224] [batch, 2048, H, W] 
+            inp = tfm(img).unsqueeze(0).to(device)   # shape: [1,3,224,224] [batch, 2048, H, W] # type: ignore[attr-defined]
             # 224 x 224 image size 
             # 3 - red, green, blue colour channels 
             # 1 - a batch - one picture 
@@ -58,8 +58,12 @@ if __name__ == "__main__":
     #HAM10000 binary split 
     ham_base  = "data/ham_binary"
     ham_train = os.path.join(ham_base, "train")
-    ham_val   = os.path.join(ham_base, "val")
     ham_test  = os.path.join(ham_base, "test")
+    
+    #SKIN-9 binary split
+    skin9_base  = "data/skin9_binary"
+    skin9_train = os.path.join(skin9_base, "train")
+    skin9_test  = os.path.join(skin9_base, "test")
 
     #Train - original and HAM10000 datasets 
     print("Extracting train features…")
@@ -70,24 +74,29 @@ if __name__ == "__main__":
     X_train = np.vstack([X_train, X2_train])
     y_train = np.concatenate([y_train, y2_train])
     
-    # VAL: only from HAM
-    print("Extracting HAM10000  val   features…")
-    X_val, y_val = extract_split(ham_val)
+    print("Extracting SKIN-9 train features…")
+    X3_train, y3_train = extract_split(skin9_train)
+    X_train = np.vstack([X_train, X3_train])
+    y_train = np.concatenate([y_train, y3_train])
 
     #Test - original and HAM 10000
-    print("Extracting test features…")
+    print("Extracting original test features…")
     X_test,  y_test  = extract_split(test_dir)
     
     print("Extracting HAM10000  test  features…")
     X2_test, y2_test = extract_split(ham_test)
     X_test = np.vstack([X_test, X2_test])
     y_test = np.concatenate([y_test, y2_test])
+    
+    print("Extracting SKIN-9 test features…")
+    X3_test, y3_test = extract_split(skin9_test)
+    X_test = np.vstack([X_test, X3_test])
+    y_test = np.concatenate([y_test, y3_test])
 
     # Save everything in zip-like folder in NumPy arrays and compress to save space 
     np.savez_compressed(
       "data/cnn_features.npz",
       X_train=X_train, y_train=y_train,
-      X_test =X_test,  y_test =y_test,
-      X_val=  X_val,   y_val=  y_val,
+      X_test =X_test,  y_test =y_test
     )
-    print("Saved features to data/cnn_features.npz")
+    print("Saved combined features to data/cnn_features.npz")
