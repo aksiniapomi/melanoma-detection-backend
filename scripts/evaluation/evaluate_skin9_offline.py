@@ -8,7 +8,7 @@ sys.path.insert(0, project_root)
 
 import numpy as np
 from joblib import load
-from scripts.extract_features import extract_split
+from scripts.feature_extraction.extract_features import extract_split
 from sklearn.metrics import accuracy_score, roc_auc_score
 
 def main():
