@@ -8,7 +8,7 @@ from torchvision import models, transforms
 from torch import nn, Tensor
 
 # Load trained classifier
-CLF_PATH = "ml_models/rf_final.joblib"
+CLF_PATH = "ml_models/rf_final.joblib" #Random Forest model 
 clf = joblib.load(CLF_PATH)
 
 # Prepare the ResNet50 feature extractor

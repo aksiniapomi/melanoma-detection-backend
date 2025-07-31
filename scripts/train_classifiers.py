@@ -14,7 +14,6 @@ def load_data(npz_path="data/cnn_features.npz"):
     data = np.load(npz_path)
     return (
         data["X_train"], data["y_train"],
-        data["X_val"],   data["y_val"],
         data["X_test"],  data["y_test"],
     )
     
@@ -58,7 +57,7 @@ def main():
     args = p.parse_args()
 
     #Load all splits
-    X_train, y_train, X_val, y_val, X_test, y_test = load_data()
+    X_train, y_train, X_test, y_test = load_data()
     
     clf = MODEL_MAP[args.model]
     
@@ -67,7 +66,6 @@ def main():
     clf.fit(X_train, y_train)
     
     # train + print metrics
-    evaluate_split("Validation", clf, X_val, y_val)
     evaluate_split("Test", clf, X_test,  y_test)
     
     # save the trained classifier

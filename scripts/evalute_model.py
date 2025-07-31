@@ -19,11 +19,12 @@ def main(model_path, features_path="data/cnn_features.npz"):
     print("=== EVALUATION ON:", features_path, "===\n")
     print("Accuracy:", accuracy_score(y_test, preds))
     print("ROC AUC:", roc_auc_score(y_test, probs))
-    print("\n" + classification_report(
-        y_test, preds,
-        target_names=["benign","malignant"],
-        digits=4
-    ))
+    print("\n", classification_report(
+    y_test, preds,
+    target_names=["benign","malignant"],
+    digits=4
+))
+
 
 if __name__ == "__main__":
     p = argparse.ArgumentParser()
